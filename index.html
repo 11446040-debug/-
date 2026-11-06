@@ -1,202 +1,359 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>校園二手課本 SQL 查詢系統</title>
-    <!-- 引入 sql.js 瀏覽器端資料庫 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; line-height: 1.6; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1, h2, h3 { color: #333; }
-        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #fafafa; }
-        label { margin-right: 15px; font-weight: bold; }
-        select, input[type="text"] { padding: 8px; margin-top: 5px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 18px; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #0056b3; }
-        textarea { width: 100%; height: 100px; font-family: monospace; padding: 10px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        table, th, td { border: 1px solid #ddd; }
-        th, td { padding: 10px; text-align: left; }
-        th { background-color: #007bff; color: white; }
-        .error { color: red; font-weight: bold; margin-top: 10px; }
-        .comparison { background-color: #e9ecef; padding: 15px; border-left: 5px solid #17a2b8; margin-top: 15px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>校園二手課本 SQL 查詢網頁</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+<style>
+:root{--bg:#f4f8fc;--card:#fff;--line:#dce6f1;--navy:#1f3a5f;--blue:#5b8fc7;--soft:#e8f1fa;--coffee:#8b6b4a;--text:#2b3445;--mute:#6b7789}
+*{box-sizing:border-box;margin:0}
+body{font-family:-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--text);background:var(--bg);display:flex;min-height:100vh;line-height:1.75}
+aside{width:230px;background:var(--navy);color:#dbe7f5;padding:32px 0;position:fixed;top:0;bottom:0}
+aside h1{font-family:"Noto Serif TC","Songti TC",serif;font-size:17px;color:#fff;padding:0 24px 6px;letter-spacing:1px}
+aside .sub{font-size:12px;padding:0 24px 28px;color:#9fb6d3;border-bottom:1px solid #35527c;margin-bottom:14px}
+aside a{display:block;padding:12px 24px;color:#c5d6ea;text-decoration:none;font-size:15px;border-left:3px solid transparent;cursor:pointer}
+aside a:hover{background:#2a4a75}
+aside a.on{background:#2a4a75;color:#fff;border-left-color:#c9a37a}
+main{margin-left:230px;flex:1;min-width:0}
+.topbar{height:76px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 36px;position:sticky;top:0;z-index:20}
+.field{position:relative}
+.field label{display:block;font-size:11px;color:var(--mute);letter-spacing:1px;margin-bottom:2px;line-height:1.2}
+.field input,.dd-btn{height:36px;border:1px solid var(--line);border-radius:6px;padding:0 12px;font-size:14px;background:#fff;color:var(--text);min-width:170px;font-family:inherit}
+.dd-btn{text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dd-btn:after{content:"▾";color:var(--mute)}
+.dd-btn.has{border-color:var(--blue);background:var(--soft)}
+.dd-menu{display:none;position:absolute;top:56px;left:0;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(31,58,95,.12);padding:8px;min-width:200px}
+.dd-menu.open{display:block}
+.dd-menu label{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--text);padding:7px 8px;border-radius:5px;cursor:pointer;margin:0;letter-spacing:0}
+.dd-menu label:hover{background:var(--soft)}
+.btn{height:36px;border:none;border-radius:6px;padding:0 18px;font-size:14px;cursor:pointer;font-family:inherit}
+.btn.p{background:var(--navy);color:#fff}.btn.p:hover{background:#2a4a75}
+.btn.g{background:#fff;border:1px solid var(--line);color:var(--mute)}
+.topbar .btn{align-self:flex-end;margin-bottom:20px}
+.topbar .field{align-self:flex-end;margin-bottom:20px}
+.topbar .field label{margin-bottom:2px}
+.content{max-width:980px;padding:36px;}
+.page{display:none}.page.on{display:block}
+h2{font-family:"Noto Serif TC","Songti TC",serif;color:var(--navy);font-size:26px;margin-bottom:6px;font-weight:600}
+h2 small{display:block;font-family:inherit;font-size:12px;color:var(--coffee);letter-spacing:3px;font-weight:400;margin-bottom:2px}
+.lead{color:var(--mute);margin-bottom:24px}
+h3{color:var(--navy);font-size:17px;margin:28px 0 10px;padding-left:10px;border-left:3px solid var(--coffee)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+.card p+p{margin-top:8px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.grid3 .card{margin:0}
+.tag{display:inline-block;font-size:12px;color:var(--coffee);background:#f5ede4;border-radius:4px;padding:0 8px;margin-bottom:6px}
+ul{padding-left:20px}li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:#fff}
+th{background:var(--soft);color:var(--navy);text-align:left;font-weight:600}
+th,td{padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+pre,textarea{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px}
+pre{background:#f0f5fa;border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;color:#27405f;line-height:1.6}
+textarea{width:100%;min-height:190px;border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:#fbfdff;color:#27405f;line-height:1.6;resize:vertical}
+.msg{margin:10px 0;font-size:14px}
+.err{background:#fbeeee;border:1px solid #e3b8b8;color:#8a3030;border-radius:8px;padding:10px 14px;font-size:14px}
+.ok{color:var(--coffee);font-weight:600}
+.row{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+.cmp{border-left:3px solid var(--blue)}
+.cmp h4{color:var(--navy);margin-bottom:6px}
+.cmp .cnt{display:inline-block;background:var(--navy);color:#fff;border-radius:20px;padding:0 12px;font-size:13px;margin-left:8px}
+.pk{color:var(--coffee);font-weight:600}
+@media(max-width:800px){aside{position:static;width:100%}body{flex-direction:column}main{margin-left:0}.topbar{flex-wrap:wrap;height:auto;padding:10px 16px}.content{padding:20px 16px}}
+</style>
 </head>
 <body>
+<aside>
+  <h1>校園二手課本<br>SQL 查詢</h1>
+  <div class="sub">資料庫管理實作</div>
+  <a data-p="p1" class="on">一、案例背景</a>
+  <a data-p="p2">二、資料庫設計</a>
+  <a data-p="p3">三、查詢操作</a>
+  <a data-p="p4">四、結果比較</a>
+</aside>
+<main>
+<div class="topbar" id="topbar"></div>
+<div class="content">
 
-<div class="container">
-    <h1>📚 校園二手課本與講義搜尋系統</h1>
+<!-- 一 -->
+<section class="page on" id="p1">
+  <h2><small>BACKGROUND</small>一、案例背景</h2>
+  <p class="lead">校園二手課本交易查詢系統</p>
+  <h3>使用者</h3>
+  <div class="card"><p>大學生，包含<b>買家</b>（想用合理價格找到指定課本）與<b>賣家</b>（想讓閒置課本被看見、順利賣出）。</p></div>
+  <h3>要解決的問題</h3>
+  <div class="card">
+    <p>傳統校園二手書買賣多依賴 FB 社團或 Line 群組，主要有以下困擾：</p>
+    <ul>
+      <li>貼文容易被洗版，舊貼文很快沉底，賣家曝光不足。</li>
+      <li>無法多條件篩選，買家需逐篇滑貼文，花費大量時間。</li>
+      <li>難以快速找到同時符合「特定預算」與「特定書況」的指定課本。</li>
+      <li>價格、書況等資訊格式不統一，不易比較。</li>
+    </ul>
+  </div>
+  <h3>預期效益</h3>
+  <div class="grid3">
+    <div class="card"><span class="tag">買家</span><p>同時疊加「課本名稱」「售價區間」「書況」，取交集後快速找到合適課本。</p></div>
+    <div class="card"><span class="tag">賣家</span><p>資料結構化儲存、可被條件搜尋，曝光更有效率。</p></div>
+    <div class="card"><span class="tag">資料管理</span><p>以關聯式資料庫統一管理學生、課本、刊登資料，避免重複與不一致。</p></div>
+  </div>
+  <h3>系統功能概述</h3>
+  <div class="card"><ul>
+    <li>以 SQL 對資料庫進行多條件查詢（<code>WHERE</code> 條件以 <code>AND</code> 交集）。</li>
+    <li>使用者可直接修改 SQL，並即時看到執行結果或錯誤訊息。</li>
+    <li>比較不同 SQL 條件下結果的變化與原因。</li>
+  </ul></div>
+</section>
 
-    <!-- 1. 案例背景 -->
-    <div class="section">
-        <h2>1. 案例背景與解決問題</h2>
-        <p><strong>給誰使用：</strong> 大學生（買家與賣家）。</p>
-        <p><strong>解決什麼問題：</strong> 傳統校園二手書買賣多依賴 FB 社團或 Line 群組，貼文容易被洗版，且無法進行多條件篩選。買家常需要花大量時間逐篇滑貼文，無法快速找到符合「特定預算」與「特定書況」的指定課本。本系統提供結構化的多條件 SQL 查詢介面，讓買家能快速進行交集搜尋。</p>
-    </div>
+<!-- 二 -->
+<section class="page" id="p2">
+  <h2><small>DATABASE DESIGN</small>二、資料庫設計</h2>
+  <p class="lead">三個資料表：Student、Textbook、Listing</p>
+  <h3>ERD 關聯圖</h3>
+  <div class="card scroll">
+  <svg viewBox="0 0 860 300" width="100%" style="min-width:700px" font-family="sans-serif" font-size="13">
+    <defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="none" stroke="#8b6b4a" stroke-width="1.5"/></marker></defs>
+    <g>
+      <rect x="10" y="30" width="220" height="190" rx="8" fill="#fff" stroke="#1f3a5f" stroke-width="1.5"/>
+      <rect x="10" y="30" width="220" height="34" rx="8" fill="#1f3a5f"/><rect x="10" y="50" width="220" height="14" fill="#1f3a5f"/>
+      <text x="120" y="53" fill="#fff" text-anchor="middle" font-weight="bold" font-size="15">Student 學生</text>
+      <text x="24" y="92" fill="#8b6b4a" font-weight="bold">PK  student_id</text>
+      <text x="24" y="120">name</text><text x="24" y="148">department</text><text x="24" y="176">phone</text><text x="24" y="204">email</text>
+    </g>
+    <g>
+      <rect x="320" y="10" width="230" height="270" rx="8" fill="#fff" stroke="#1f3a5f" stroke-width="1.5"/>
+      <rect x="320" y="10" width="230" height="34" rx="8" fill="#5b8fc7"/><rect x="320" y="30" width="230" height="14" fill="#5b8fc7"/>
+      <text x="435" y="33" fill="#fff" text-anchor="middle" font-weight="bold" font-size="15">Listing 刊登</text>
+      <text x="334" y="72" fill="#8b6b4a" font-weight="bold">PK  listing_id</text>
+      <text x="334" y="100" fill="#8b6b4a">FK  textbook_id</text>
+      <text x="334" y="128" fill="#8b6b4a">FK  seller_id</text>
+      <text x="334" y="156">price</text><text x="334" y="184">book_condition</text><text x="334" y="212">status</text><text x="334" y="240">posted_date</text>
+    </g>
+    <g>
+      <rect x="640" y="30" width="210" height="190" rx="8" fill="#fff" stroke="#1f3a5f" stroke-width="1.5"/>
+      <rect x="640" y="30" width="210" height="34" rx="8" fill="#1f3a5f"/><rect x="640" y="50" width="210" height="14" fill="#1f3a5f"/>
+      <text x="745" y="53" fill="#fff" text-anchor="middle" font-weight="bold" font-size="15">Textbook 課本</text>
+      <text x="654" y="92" fill="#8b6b4a" font-weight="bold">PK  textbook_id</text>
+      <text x="654" y="120">title</text><text x="654" y="148">author</text><text x="654" y="176">course</text><text x="654" y="204">list_price</text>
+    </g>
+    <line x1="230" y1="128" x2="320" y2="128" stroke="#8b6b4a" stroke-width="1.5" marker-end="url(#a)"/>
+    <line x1="640" y1="100" x2="550" y2="100" stroke="#8b6b4a" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="236" y="118" fill="#8b6b4a">1</text><text x="298" y="118" fill="#8b6b4a">N</text>
+    <text x="616" y="90" fill="#8b6b4a">1</text><text x="556" y="90" fill="#8b6b4a">N</text>
+    <text x="275" y="148" fill="#6b7789" font-size="12" text-anchor="middle">賣出</text>
+    <text x="595" y="120" fill="#6b7789" font-size="12" text-anchor="middle">對應</text>
+  </svg>
+  </div>
+  <div class="card"><p><b>關聯說明：</b>一位學生可刊登多筆二手書（1 對 N）；一本課本可被多位賣家重複刊登（1 對 N）。Listing 為連結學生與課本的交易紀錄表，以外鍵 <code>seller_id</code>、<code>textbook_id</code> 連接。</p></div>
 
-    <!-- 2. 資料庫設計與說明 -->
-    <div class="section">
-        <h2>2. 資料庫架構說明</h2>
-        <p>系統包含兩張資料表：<code>books</code>（二手書籍）與 <code>users</code>（賣家資訊），透過 <code>books.seller_id = users.id</code> 關聯。</p>
-        <ul>
-            <li><strong>books 欄位：</strong> id, title (課本名稱), price (售價), condition (書況), status (販售狀態), seller_id</li>
-            <li><strong>users 欄位：</strong> id, name (賣家姓名), contact (聯絡方式)</li>
-        </ul>
-    </div>
+  <h3>欄位說明</h3>
+  <div class="scroll"><table>
+    <tr><th>資料表</th><th>欄位</th><th>型態</th><th>說明</th></tr>
+    <tr><td rowspan="5">Student</td><td class="pk">student_id</td><td>INTEGER</td><td>學生編號（主鍵）</td></tr>
+    <tr><td>name</td><td>TEXT</td><td>姓名</td></tr><tr><td>department</td><td>TEXT</td><td>系所</td></tr><tr><td>phone</td><td>TEXT</td><td>聯絡電話</td></tr><tr><td>email</td><td>TEXT</td><td>電子信箱</td></tr>
+    <tr><td rowspan="5">Textbook</td><td class="pk">textbook_id</td><td>INTEGER</td><td>課本編號（主鍵）</td></tr>
+    <tr><td>title</td><td>TEXT</td><td>課本名稱</td></tr><tr><td>author</td><td>TEXT</td><td>作者</td></tr><tr><td>course</td><td>TEXT</td><td>對應課程</td></tr><tr><td>list_price</td><td>INTEGER</td><td>新書定價</td></tr>
+    <tr><td rowspan="7">Listing</td><td class="pk">listing_id</td><td>INTEGER</td><td>刊登編號（主鍵）</td></tr>
+    <tr><td>textbook_id</td><td>INTEGER</td><td>外鍵，對應 Textbook</td></tr><tr><td>seller_id</td><td>INTEGER</td><td>外鍵，對應 Student（賣家）</td></tr>
+    <tr><td>price</td><td>INTEGER</td><td>售價（元）</td></tr><tr><td>book_condition</td><td>TEXT</td><td>書況：全新／8成新／些許使用痕跡／重度使用痕跡</td></tr>
+    <tr><td>status</td><td>TEXT</td><td>在售／已售出</td></tr><tr><td>posted_date</td><td>TEXT</td><td>刊登日期</td></tr>
+  </table></div>
 
-    <!-- 3. 查詢操作區塊 -->
-    <div class="section">
-        <h2>3. 查詢操作（三條件疊加）</h2>
-        <div>
-            <label>1. 課本名稱：
-                <input type="text" id="filterTitle" placeholder="例如：資料庫 或 微積分" value="資料庫">
-            </label><br>
+  <h3>建立資料表 SQL</h3>
+  <pre id="ddl"></pre>
 
-            <label>2. 售價區間：
-                <select id="filterPrice">
-                    <option value="all">不限金額</option>
-                    <option value="under300" selected>低於 300 元</option>
-                    <option value="300to600">300 - 600 元</option>
-                    <option value="600to1000">600 - 1000 元</option>
-                    <option value="above1000">高於 1000 元</option>
-                </select>
-            </label><br>
+  <h3>樣本資料</h3>
+  <p class="msg">Student</p><div class="scroll" id="s_student"></div>
+  <p class="msg">Textbook</p><div class="scroll" id="s_book"></div>
+  <p class="msg">Listing</p><div class="scroll" id="s_list"></div>
+</section>
 
-            <label>3. 書況：
-                <select id="filterCondition">
-                    <option value="all">不限書況</option>
-                    <option value="全新">全新</option>
-                    <option value="8成新" selected>8成新</option>
-                    <option value="些許使用痕跡">些許使用痕跡</option>
-                    <option value="重度使用痕跡">重度使用痕跡</option>
-                </select>
-            </label><br><br>
+<!-- 三 -->
+<section class="page" id="p3">
+  <h2><small>QUERY</small>三、查詢操作</h2>
+  <p class="lead">使用上方的三個條件進行查詢，條件可同時疊加；也可以直接修改下方 SQL 後再執行。</p>
+  <h3>查詢問題</h3>
+  <div class="card" id="question"></div>
+  <h3>SQL 語法（可直接編輯）</h3>
+  <textarea id="sql" spellcheck="false"></textarea>
+  <div class="row"><button class="btn p" id="run">▶ 執行 SQL</button><button class="btn g" id="sync">還原為篩選條件產生的 SQL</button></div>
+  <h3>預期結果</h3>
+  <div class="card" id="expect"></div>
+  <h3>實際執行結果</h3>
+  <div id="status" class="msg"></div>
+  <div id="result"></div>
+</section>
 
-            <button onclick="generateSQL()">生成 SQL 並執行</button>
-        </div>
+<!-- 四 -->
+<section class="page" id="p4">
+  <h2><small>COMPARISON</small>四、結果比較</h2>
+  <p class="lead">針對同一個問題「想買經濟學相關課本」，逐步修改 SQL 條件，觀察結果的變化。下列結果皆由資料庫即時執行產生。</p>
+  <div id="cmps"></div>
+  <h3>綜合說明</h3>
+  <div class="card"><ul>
+    <li><b>條件越多，結果越少：</b>各條件以 <code>AND</code> 連接為「交集」，每加一個條件，符合的資料只會減少或持平。</li>
+    <li><b>OR 與 AND 的差別：</b>同一類別內可複選（如書況選兩種）用 <code>OR / IN</code>，結果會變多；不同類別間用 <code>AND</code>。</li>
+    <li><b>邊界值要明確：</b>售價「300–600」若寫成 <code>&gt;= 300 AND &lt; 600</code>，剛好 600 元的書會被歸到下一區間。</li>
+    <li><b>錯誤訊息：</b>欄位名稱寫錯時資料庫會回報錯誤，不會回傳結果，可據此除錯。</li>
+  </ul></div>
+</section>
 
-        <h3>目前的 SQL 語法（可自行修改與測試）：</h3>
-        <textarea id="sqlQuery"></textarea><br>
-        <button onclick="executeQuery()">執行 SQL 查詢</button>
-
-        <h3>查詢結果：</h3>
-        <div id="resultOutput">初始化中...</div>
-    </div>
-
-    <!-- 4. 結果比較分析 -->
-    <div class="section">
-        <h2>4. 查詢結果比較與分析說明</h2>
-        <div class="comparison">
-            <h4>針對同一問題修改 SQL 的結果變化說明：</h4>
-            <p><strong>情境：</strong> 尋找「低於 300 元」且「全新」的資料庫課本。</p>
-            <ul>
-                <li><strong>過濾嚴格的 SQL：</strong> <code>SELECT * FROM books WHERE title LIKE '%資料庫%' AND price &lt; 300 AND condition = '全新';</code>
-                    <br>➔ <strong>結果：</strong> 0 筆資料（條件過於嚴苛，庫存中沒有此組合）。
-                </li>
-                <li><strong>修改後放寬條件的 SQL：</strong> <code>SELECT * FROM books WHERE title LIKE '%資料庫%' AND price BETWEEN 300 AND 600 AND condition = '全新';</code>
-                    <br>➔ <strong>結果：</strong> 成功查到 1 筆金額為 $550 的全新課本。
-                </li>
-                <li><strong>原因說明：</strong> 因為市場上「全新」課本價格通常較高，適度調高售價預算區間後，就能順利查詢到符合書況要求的書籍。</li>
-            </ul>
-        </div>
-    </div>
 </div>
+</main>
 
 <script>
-    let db;
+const $=s=>document.querySelector(s);
+const DDL=`CREATE TABLE Student(
+  student_id INTEGER PRIMARY KEY, name TEXT, department TEXT, phone TEXT, email TEXT);
+CREATE TABLE Textbook(
+  textbook_id INTEGER PRIMARY KEY, title TEXT, author TEXT, course TEXT, list_price INTEGER);
+CREATE TABLE Listing(
+  listing_id INTEGER PRIMARY KEY,
+  textbook_id INTEGER REFERENCES Textbook(textbook_id),
+  seller_id INTEGER REFERENCES Student(student_id),
+  price INTEGER, book_condition TEXT, status TEXT, posted_date TEXT);`;
+const DATA=`INSERT INTO Student VALUES
+(1,'陳怡君','企管系','0912-000-101','s1@school.edu'),(2,'林冠宇','資管系','0912-000-102','s2@school.edu'),
+(3,'張雅婷','會計系','0912-000-103','s3@school.edu'),(4,'王志豪','經濟系','0912-000-104','s4@school.edu'),
+(5,'李佳穎','財金系','0912-000-105','s5@school.edu'),(6,'黃柏翰','數學系','0912-000-106','s6@school.edu');
+INSERT INTO Textbook VALUES
+(1,'經濟學原理','Mankiw','經濟學',950),(2,'個體經濟學','Varian','個體經濟學',880),
+(3,'微積分','Stewart','微積分',1100),(4,'會計學','Kieso','會計學',1050),
+(5,'資料庫系統概論','Silberschatz','資料庫管理',980),(6,'統計學','Anderson','統計學',820),
+(7,'Python 程式設計','Matthes','程式設計',620),(8,'行銷管理','Kotler','行銷學',900),
+(9,'線性代數','Lay','線性代數',760),(10,'總體經濟學','Blanchard','總體經濟學',850);
+INSERT INTO Listing VALUES
+(1,1,4,780,'全新','在售','2026-10-02'),(2,1,1,520,'8成新','在售','2026-10-05'),
+(3,1,5,280,'重度使用痕跡','在售','2026-10-08'),(4,2,4,450,'些許使用痕跡','在售','2026-10-03'),
+(5,2,2,650,'8成新','在售','2026-10-11'),(6,3,6,1200,'全新','在售','2026-09-28'),
+(7,3,3,580,'些許使用痕跡','在售','2026-10-06'),(8,3,1,250,'重度使用痕跡','在售','2026-10-09'),
+(9,4,3,900,'8成新','在售','2026-10-01'),(10,4,5,600,'些許使用痕跡','在售','2026-10-12'),
+(11,5,2,750,'全新','在售','2026-10-04'),(12,5,2,350,'重度使用痕跡','已售出','2026-09-20'),
+(13,6,6,480,'8成新','在售','2026-10-07'),(14,7,2,300,'些許使用痕跡','在售','2026-10-10'),
+(15,8,1,1050,'全新','在售','2026-10-13'),(16,8,5,400,'些許使用痕跡','在售','2026-10-14'),
+(17,9,6,200,'重度使用痕跡','在售','2026-10-15'),(18,10,4,680,'8成新','在售','2026-10-16'),
+(19,10,4,320,'些許使用痕跡','在售','2026-10-17'),(20,1,3,1000,'全新','在售','2026-10-18');`;
+const BASE=`SELECT l.listing_id AS 編號, t.title AS 課本名稱, t.author AS 作者,
+       l.price AS 售價, l.book_condition AS 書況, s.name AS 賣家, l.posted_date AS 刊登日
+FROM Listing l
+JOIN Textbook t ON l.textbook_id = t.textbook_id
+JOIN Student  s ON l.seller_id  = s.student_id
+WHERE l.status = '在售'`;
+const PRICES=[["低於 300","l.price < 300"],["300 – 600","l.price >= 300 AND l.price < 600"],["600 – 1000","l.price >= 600 AND l.price <= 1000"],["高於 1000","l.price > 1000"]];
+const CONDS=["全新","8成新","些許使用痕跡","重度使用痕跡"];
+let db;
 
-    // 初始化 SQLite 記憶體資料庫
-    async function initDB() {
-        const SQL = await initSqlJs({
-            locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-        });
-        db = new SQL.Database();
+function esc(x){return String(x).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function runSQL(sql){try{const r=db.exec(sql);return{ok:1,res:r}}catch(e){return{ok:0,err:e.message}}}
+function tbl(res){
+  if(!res.length)return'<div class="card">查無符合條件的資料（0 筆）。</div>';
+  const r=res[0];
+  return'<div class="scroll"><table><tr>'+r.columns.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr>'+
+    r.values.map(v=>'<tr>'+v.map(x=>'<td>'+esc(x??'')+'</td>').join('')+'</tr>').join('')+'</table></div>';
+}
+function count(res){return res.length?res[0].values.length:0}
 
-        // 建表與寫入範例資料
-        const initScript = `
-            CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, contact TEXT);
-            CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, price INTEGER, condition TEXT, status TEXT, seller_id INTEGER);
+/* Top bar (only for page 3) */
+function buildTopbar(){
+  $('#topbar').innerHTML=`
+  <div class="field"><label>課本名稱</label><input id="fTitle" placeholder="例如：經濟"></div>
+  <div class="field"><label>售價</label><button class="dd-btn" id="bPrice">不限</button>
+    <div class="dd-menu" id="mPrice">${PRICES.map((p,i)=>`<label><input type="checkbox" value="${i}">${p[0]}</label>`).join('')}</div></div>
+  <div class="field"><label>書況</label><button class="dd-btn" id="bCond">不限</button>
+    <div class="dd-menu" id="mCond">${CONDS.map(c=>`<label><input type="checkbox" value="${c}">${c}</label>`).join('')}</div></div>
+  <button class="btn g" id="reset">重設</button>`;
+  $('#fTitle').oninput=apply;
+  [['bPrice','mPrice'],['bCond','mCond']].forEach(([b,m])=>{
+    $('#'+b).onclick=e=>{e.stopPropagation();const o=$('#'+m).classList.contains('open');closeDD();if(!o)$('#'+m).classList.add('open')};
+    $('#'+m).onclick=e=>e.stopPropagation();
+    $('#'+m).onchange=apply;
+  });
+  $('#reset').onclick=()=>{$('#fTitle').value='';document.querySelectorAll('#topbar input[type=checkbox]').forEach(c=>c.checked=0);apply()};
+}
+function closeDD(){document.querySelectorAll('.dd-menu').forEach(m=>m.classList.remove('open'))}
+document.addEventListener('click',closeDD);
 
-            INSERT INTO users VALUES (1, '王小明', 'Line: ming123'), (2, '陳大同', 'Email: datong@example.com'), (3, '林小美', 'Line: may_lin');
-            INSERT INTO books VALUES 
-            (1, '資料庫系統概論', 250, '8成新', '待售中', 1),
-            (2, '資料庫系統概論', 550, '全新', '待售中', 2),
-            (3, '微積分基本原理', 180, '重度使用痕跡', '待售中', 1),
-            (4, 'Python 程式設計演練', 400, '些許使用痕跡', '待售中', 3),
-            (5, '統計學導論', 1200, '全新', '待售中', 2),
-            (6, '資料庫系統概論', 800, '全新', '已售出', 3);
-        `;
-        db.run(initScript);
-        
-        // 預設產出一次 SQL
-        generateSQL();
-    }
+function getFilters(){
+  return{title:$('#fTitle').value.trim().replace(/'/g,"''"),
+    prices:[...document.querySelectorAll('#mPrice input:checked')].map(c=>+c.value),
+    conds:[...document.querySelectorAll('#mCond input:checked')].map(c=>c.value)};
+}
+function buildSQL(f){
+  let w=[];
+  if(f.title)w.push(`t.title LIKE '%${f.title}%'`);
+  if(f.prices.length)w.push('('+f.prices.map(i=>'('+PRICES[i][1]+')').join(' OR ')+')');
+  if(f.conds.length)w.push(`l.book_condition IN (${f.conds.map(c=>`'${c}'`).join(', ')})`);
+  return BASE+w.map(x=>`\n  AND ${x}`).join('')+'\nORDER BY l.price;';
+}
+function apply(){
+  const f=getFilters();
+  $('#bPrice').textContent=f.prices.length?f.prices.map(i=>PRICES[i][0]).join('、'):'不限';
+  $('#bCond').textContent=f.conds.length?f.conds.join('、'):'不限';
+  $('#bPrice').classList.toggle('has',!!f.prices.length);
+  $('#bCond').classList.toggle('has',!!f.conds.length);
+  $('#sql').value=buildSQL(f);
+  describe(f);
+  exec();
+}
+function describe(f){
+  const p=[];
+  p.push(f.title?`課本名稱包含「<b>${esc(f.title)}</b>」`:'不限課本名稱');
+  p.push(f.prices.length?`售價為「<b>${f.prices.map(i=>PRICES[i][0]).join('」或「')}</b>」元`:'不限售價');
+  p.push(f.conds.length?`書況為「<b>${f.conds.join('」或「')}</b>」`:'不限書況');
+  $('#question').innerHTML='查詢目前「在售」的二手課本，且同時符合：<br>① '+p[0]+'<br>② '+p[1]+'<br>③ '+p[2];
+  const n=f.title||f.prices.length||f.conds.length;
+  $('#expect').innerHTML=n?'三個條件取<b>交集</b>（AND）；同一條件內若複選則為「或」。每多設定一個條件，結果筆數只會減少或不變，列表依售價由低到高排序。':'未設定任何條件時，應列出所有「在售」的二手課本（已售出者不顯示），共 <b>18</b> 筆。';
+}
+function exec(){
+  const r=runSQL($('#sql').value);
+  if(!r.ok){$('#status').innerHTML='<div class="err"><b>執行錯誤：</b>'+esc(r.err)+'</div>';$('#result').innerHTML='';return}
+  $('#status').innerHTML=`共找到 <span class="ok">${count(r.res)}</span> 筆資料`;
+  $('#result').innerHTML=tbl(r.res);
+}
 
-    // 根據選擇的 3 個條件自動生成 SQL 語法
-    function generateSQL() {
-        const title = document.getElementById('filterTitle').value.trim();
-        const price = document.getElementById('filterPrice').value;
-        const condition = document.getElementById('filterCondition').value;
+/* Comparison page */
+function buildCmp(){
+  const W=x=>BASE+x+'\nORDER BY l.price;';
+  const cases=[
+    ["A. 只用課本名稱",W("\n  AND t.title LIKE '%經濟%'"),"只限制書名含「經濟」，範圍最廣，包含經濟學原理、個體經濟學、總體經濟學的所有在售刊登。"],
+    ["B. 再加上售價「300–600」",W("\n  AND t.title LIKE '%經濟%'\n  AND l.price >= 300 AND l.price < 600"),"加入售價條件後，價格太高或太低的書被排除，結果變少。因 AND 取交集，必須同時符合書名與價格。"],
+    ["C. 再加上書況「些許使用痕跡」",W("\n  AND t.title LIKE '%經濟%'\n  AND l.price >= 300 AND l.price < 600\n  AND l.book_condition = '些許使用痕跡'"),"三個條件疊加，結果最精準，只剩預算內且書況良好的書；適合想省錢又不要太舊的買家。"],
+    ["D. 書況改為複選（OR）",W("\n  AND t.title LIKE '%經濟%'\n  AND l.price >= 300 AND l.price < 600\n  AND l.book_condition IN ('些許使用痕跡','8成新')"),"把單一書況改成 IN（等同 OR），可接受的書況變多，因此結果比 C 增加。"],
+    ["E. 錯誤示範：欄位名稱寫錯",W("\n  AND t.title LIKE '%經濟%'\n  AND l.cost < 600"),"Listing 資料表中沒有 cost 欄位（正確為 price），資料庫回報錯誤而不是回傳結果，修正欄位名稱即可。"]
+  ];
+  $('#cmps').innerHTML=cases.map(c=>{
+    const r=runSQL(c[1]);
+    const out=r.ok?tbl(r.res):'<div class="err"><b>執行錯誤：</b>'+esc(r.err)+'</div>';
+    return`<div class="card cmp"><h4>${c[0]}${r.ok?`<span class="cnt">${count(r.res)} 筆</span>`:'<span class="cnt" style="background:#a45050">錯誤</span>'}</h4>
+    <pre>${esc(c[1])}</pre><p style="margin:10px 0"><b>變化原因：</b>${c[2]}</p>${out}</div>`}).join('');
+}
 
-        let sql = "SELECT books.title AS 課本名稱, books.price AS 售價, books.condition AS 書況, users.name AS 賣家姓名, users.contact AS 聯絡方式\n";
-        sql += "FROM books\nJOIN users ON books.seller_id = users.id\nWHERE books.status = '待售中'\n";
+/* Sample data tables */
+function showSample(){
+  $('#ddl').textContent=DDL;
+  $('#s_student').innerHTML=tbl(db.exec('SELECT * FROM Student'));
+  $('#s_book').innerHTML=tbl(db.exec('SELECT * FROM Textbook'));
+  $('#s_list').innerHTML=tbl(db.exec('SELECT * FROM Listing'));
+}
 
-        if (title) {
-            sql += `  AND books.title LIKE '%${title}%'\n`;
-        }
+/* Navigation */
+document.querySelectorAll('aside a').forEach(a=>a.onclick=()=>{
+  document.querySelectorAll('aside a').forEach(x=>x.classList.remove('on'));a.classList.add('on');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  $('#'+a.dataset.p).classList.add('on');
+  $('#topbar').style.visibility=a.dataset.p==='p3'?'visible':'hidden';
+  closeDD();window.scrollTo(0,0);
+});
+$('#topbar').style.visibility='hidden';
+buildTopbar();
+$('#run').onclick=exec;
+$('#sync').onclick=apply;
 
-        if (price === 'under300') sql += "  AND books.price < 300\n";
-        else if (price === '300to600') sql += "  AND books.price BETWEEN 300 AND 600\n";
-        else if (price === '600to1000') sql += "  AND books.price BETWEEN 600 AND 1000\n";
-        else if (price === 'above1000') sql += "  AND books.price > 1000\n";
-
-        if (condition !== 'all') {
-            sql += `  AND books.condition = '${condition}'\n`;
-        }
-
-        sql += ";";
-        document.getElementById('sqlQuery').value = sql;
-        executeQuery();
-    }
-
-    // 執行 textarea 裡的 SQL 並呈現成果
-    function executeQuery() {
-        const query = document.getElementById('sqlQuery').value;
-        const output = document.getElementById('resultOutput');
-        output.innerHTML = '';
-
-        try {
-            const res = db.exec(query);
-            if (res.length === 0) {
-                output.innerHTML = '<p>查無符合條件的資料。</p>';
-                return;
-            }
-
-            const columns = res[0].columns;
-            const values = res[0].values;
-
-            let html = '<table><thead><tr>';
-            columns.forEach(col => html += `<th>${col}</th>`);
-            html += '</tr></thead><tbody>';
-
-            values.forEach(row => {
-                html += '<tr>';
-                row.forEach(val => html += `<td>${val}</td>`);
-                html += '</tr>';
-            });
-            html += '</tbody></table>';
-
-            output.innerHTML = html;
-        } catch (err) {
-            output.innerHTML = `<p class="error">SQL 語法錯誤：${err.message}</p>`;
-        }
-    }
-
-    // 啟動資料庫
-    initDB();
+initSqlJs({locateFile:f=>`https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${f}`}).then(SQL=>{
+  db=new SQL.Database();db.run(DDL);db.run(DATA);
+  showSample();buildCmp();apply();
+}).catch(e=>{$('#status').innerHTML='<div class="err">資料庫載入失敗，請確認網路連線後重新整理。</div>'});
 </script>
-
 </body>
 </html>
